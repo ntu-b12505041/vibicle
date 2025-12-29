@@ -227,9 +227,9 @@ export default function CarDetailPage() {
           } else {
               // Wallet
               tx.setSender(user.address);
-              signAndExecute({ transaction: tx, options: { showEffects: true } }, {
-                  onSuccess: () => { alert("留言成功！"); setNewComment(""); window.location.reload(); },
-                  onError: (e) => alert("失敗: " + e.message)
+              signAndExecute({ transaction: tx }, {
+                onSuccess: () => { alert("留言成功！"); setNewComment(""); window.location.reload(); },
+                onError: (e) => alert("失敗: " + e.message)
               });
           }
 

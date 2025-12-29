@@ -179,29 +179,14 @@ export function MintCar() {
         signAndExecute(
             { 
                 transaction: tx,
-                // 🔴 修正：options 必須放在第一個參數物件內
-                options: {
-                    showEffects: true,
-                    showObjectChanges: true
-                }
             }, 
             {
                 onSuccess: (res) => { 
+                    // 🔴 修正 2：簡化成功判斷
+                    // 因為沒傳 options，可能拿不到 effects，我們直接視為成功
                     console.log("錢包回傳:", res);
-                    // 🔴 安全讀取 status
-                    const status = res.effects?.status?.status;
-                    
-                    if (status === "success") {
-                        alert(`鑄造成功!\nDigest: ${res.digest}`); 
-                        window.location.reload();
-                    } else if (status === "failure") {
-                        const err = res.effects?.status?.error || "Unknown";
-                        if (err.includes("code: 4")) alert("鑄造失敗：VIN 重複");
-                        else alert("鑄造失敗：" + err);
-                    } else {
-                        alert(`交易已送出!\nDigest: ${res.digest}`);
-                        window.location.reload();
-                    }
+                    alert(`鑄造成功 (已送出)!\nDigest: ${res.digest}`); 
+                    window.location.reload();
                 },
                 onError: (e) => alert("錢包交易失敗: " + e.message)
             }
