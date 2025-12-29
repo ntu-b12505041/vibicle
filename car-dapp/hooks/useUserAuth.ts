@@ -69,7 +69,9 @@ export function useUserAuth() {
         window.localStorage.removeItem("demo_zk_session");
         window.localStorage.removeItem("shinami_jwt");
         setZkSession(null);
-        window.location.reload();
+        
+        // 登出後直接跳轉回首頁，避免留在需要權限的頁面
+        window.location.href = "/";
     }
   };
 }

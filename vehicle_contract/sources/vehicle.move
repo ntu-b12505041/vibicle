@@ -6,6 +6,7 @@ module vehicle_contract::vehicle {
     use sui::display;
     use sui::package;
     use sui::dynamic_object_field as dof;
+    use sui::dynamic_field as df;
 
     // --- 錯誤碼 ---
     const E_INVALID_VIN_LENGTH: u64 = 1;
@@ -14,6 +15,7 @@ module vehicle_contract::vehicle {
     const E_VIN_ALREADY_EXISTS: u64 = 4;
     const E_TYPE_MISMATCH: u64 = 5;
     const E_NOT_OWNER: u64 = 6;
+    const E_CAP_NOT_FOUND: u64 = 7;
 
     // --- 機構與紀錄類型常數 ---
     const ORG_TYPE_SERVICE: u8 = 1;     
@@ -58,7 +60,8 @@ module vehicle_contract::vehicle {
         current_mileage: u64,
         is_listed: bool,
         price: Option<u64>,
-        passport: DigitalPassport 
+        passport: DigitalPassport,
+        comment_count: u64
     }
 
     #[allow(lint(missing_key))]
@@ -86,6 +89,13 @@ module vehicle_contract::vehicle {
         dtc_codes_cleared: vector<String>,
         battery_registration: Option<String>,
         next_service_due_km: u64
+    }
+
+    // 使用 dynamic field 掛上留言
+    public struct Comment has store, drop {
+        sender: address,
+        message: String,
+        timestamp: u64
     }
 
     // --- 事件 ---
@@ -120,6 +130,12 @@ module vehicle_contract::vehicle {
         car_id: ID,
         is_listed: bool,
         price: Option<u64>
+    }
+
+    public struct CommentPosted has copy, drop { 
+        car_id: ID, 
+        sender: address, 
+        message: String 
     }
 
     // --- 初始化 ---
@@ -190,10 +206,11 @@ module vehicle_contract::vehicle {
         auth_registry: &mut AuthRegistry,
         target_cap_id: ID
     ) {
-        if (table::contains(&auth_registry.permissions, target_cap_id)) {
-            let status = table::borrow_mut(&mut auth_registry.permissions, target_cap_id);
-            *status = false; 
-        };
+        assert!(table::contains(&auth_registry.permissions, target_cap_id), E_CAP_NOT_FOUND);
+        
+        let status = table::borrow_mut(&mut auth_registry.permissions, target_cap_id);
+        *status = false;
+
         event::emit(ThirdPartyRevoked { cap_id: target_cap_id });
     }
 
@@ -228,7 +245,8 @@ module vehicle_contract::vehicle {
             current_mileage: initial_mileage,
             is_listed: false,
             price: option::none(),
-            passport
+            passport,
+            comment_count: 0
         };
 
         table::add(&mut car_registry.cars, vin, car_id);
@@ -238,7 +256,7 @@ module vehicle_contract::vehicle {
         transfer::share_object(car);
     }
 
-    public entry fun transfer_car(
+    public fun transfer_car(
         car: &mut CarNFT, 
         recipient: address, 
         ctx: &TxContext
@@ -259,19 +277,24 @@ module vehicle_contract::vehicle {
     public fun update_listing(
         car: &mut CarNFT,
         is_listed: bool,
-        price: Option<u64>,
+        new_price: u64,
         ctx: &TxContext
     ) {
         // 只有車主能決定是否上架
         assert!(car.owner == tx_context::sender(ctx), E_NOT_OWNER);
         
         car.is_listed = is_listed;
-        car.price = price;
+        
+        if (is_listed) {
+            car.price = option::some(new_price);
+        } else {
+            car.price = option::none<u64>();
+        };
 
         event::emit(ListingUpdated {
             car_id: object::uid_to_inner(&car.id),
             is_listed,
-            price
+            price: car.price
         });
     }
 
@@ -339,5 +362,33 @@ module vehicle_contract::vehicle {
         car.passport.record_count = car.passport.record_count + 1;
 
         event::emit(RecordAdded { car_id: object::id(car), record_type, provider: cap.name });
+    }
+
+    // 每台車輛的公共留言版
+    public fun post_comment(
+        car: &mut CarNFT,
+        message: String,
+        clock: &Clock,
+        ctx: &TxContext
+    ) {
+        let sender = tx_context::sender(ctx);
+        let timestamp = clock::timestamp_ms(clock);
+        
+        let comment = Comment {
+            sender,
+            message,
+            timestamp
+        };
+
+        // 使用 comment_count 作為 Dynamic Field 的 Key
+        df::add(&mut car.id, car.comment_count, comment);
+        
+        car.comment_count = car.comment_count + 1;
+
+        event::emit(CommentPosted { 
+            car_id: object::uid_to_inner(&car.id), 
+            sender, 
+            message 
+        });
     }
 }

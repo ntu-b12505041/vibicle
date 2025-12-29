@@ -8,7 +8,7 @@ import { useCars } from "../hooks/useCars";
 import { PACKAGE_ID, MODULE_NAME } from "../constants";
 import { useUserAuth } from "../hooks/useUserAuth";
 
-// zkLogin & Shinami 相關引用
+// zkLogin & Shinami
 import { EnokiClient } from "@mysten/enoki";
 import { fromB64, toB64 } from "@mysten/sui/utils";
 import { SuiClient } from "@mysten/sui/client";
@@ -18,26 +18,24 @@ import { getZkLoginSignature } from "@mysten/sui/zklogin";
 const SUI_RPC_URL = "https://fullnode.testnet.sui.io:443";
 
 export function MyCars() {
-  const { user } = useUserAuth(); // 取得當前使用者 (包含 zkLogin session)
-  const { cars, isLoading } = useCars(user?.address); // 根據地址抓車
+  const { user } = useUserAuth();
+  const { cars, isLoading } = useCars(user?.address);
   const { mutate: signAndExecute } = useSignAndExecuteTransaction();
   
-  // 處理 Loading 狀態
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // 🔴 核心功能：zkLogin 專用的交易執行器 (封裝了 Shinami + ZKP)
+  // zkLogin 交易執行器
   const executeZkTransaction = async (tx: Transaction, successMessage: string) => {
     setIsProcessing(true);
     try {
         const session = (user as any).session;
         if (!session) throw new Error("Session 無效");
 
-        // 1. 還原 Keypair
         const keypairBytes = fromB64(session.ephemeralKeyPair);
         const ephemeralKeyPair = Ed25519Keypair.fromSecretKey(keypairBytes);
         const pubKey = ephemeralKeyPair.getPublicKey();
 
-        // 2. 獲取 ZK Proof (需要後端 API)
+        // ZKP
         const zkpResponse = await fetch("/api/zkp", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -52,10 +50,9 @@ export function MyCars() {
         if (!zkpResponse.ok) throw new Error("ZK Proof 生成失敗");
         const zkp = await zkpResponse.json();
 
-        // 3. 設定 Sender (使用目前 user.address，這是我們已經修正過的正確地址)
         tx.setSender(user!.address);
 
-        // 4. 建構交易 Bytes & 請求 Shinami 贊助
+        // Sponsor
         const suiClient = new SuiClient({ url: SUI_RPC_URL });
         const txBytes = await tx.build({ client: suiClient, onlyTransactionKind: true });
 
@@ -69,7 +66,7 @@ export function MyCars() {
         if (!sponsorRes.ok) throw new Error("Shinami 贊助失敗");
         const sponsoredData = await sponsorRes.json();
 
-        // 5. 簽名 & 上鏈
+        // Sign & Execute
         const sponsoredTx = Transaction.from(fromB64(sponsoredData.bytes));
         const { signature: userSignature } = await sponsoredTx.sign({
             client: suiClient,
@@ -114,11 +111,9 @@ export function MyCars() {
           arguments: [ tx.object(carId), tx.pure.address(recipient) ]
       });
 
-      // 分流處理
       if (user?.type === "zklogin") {
           await executeZkTransaction(tx, "過戶成功！車輛已移出您的車庫。");
       } else {
-          // 錢包流程
           tx.setSender(user!.address);
           signAndExecute({ transaction: tx, options: { showEffects: true } }, {
               onSuccess: () => { alert("過戶成功！車輛已移出您的車庫。"); window.location.reload(); },
@@ -127,29 +122,42 @@ export function MyCars() {
       }
   };
 
-  // --- 動作：上下架 ---
+  // --- 動作：上下架 (含價格設定) ---
   const handleListing = async (carId: string, currentStatus: boolean) => {
-      const newStatus = !currentStatus;
-      
-      const tx = new Transaction();
-      tx.moveCall({
-          target: `${PACKAGE_ID}::${MODULE_NAME}::update_listing`,
-          arguments: [
-              tx.object(carId),
-              tx.pure.bool(newStatus),
-              tx.pure.option("u64", newStatus ? 100000000 : null) // 預設 0.1 SUI
-          ]
-      });
+    const newStatus = !currentStatus;
+    let priceInMist = 0; // 預設為 0
 
-      if (user?.type === "zklogin") {
-          await executeZkTransaction(tx, newStatus ? "已上架！" : "已下架！");
-      } else {
-          tx.setSender(user!.address);
-          signAndExecute({ transaction: tx, options: { showEffects: true } }, {
-              onSuccess: () => { alert(newStatus ? "已上架！" : "已下架！"); window.location.reload(); },
-              onError: (e) => alert("操作失敗: " + e.message)
-          });
-      }
+    // 如果是要上架，詢問價格
+    if (newStatus) {
+        const inputPrice = prompt("請輸入出售價格 (SUI):", "0.1");
+        if (inputPrice === null) return; // 取消
+        
+        const price = parseFloat(inputPrice);
+        if (isNaN(price) || price <= 0) return alert("請輸入有效的價格");
+        
+        priceInMist = Math.floor(price * 1_000_000_000);
+    }
+    
+    const tx = new Transaction();
+    tx.moveCall({
+        target: `${PACKAGE_ID}::${MODULE_NAME}::update_listing`,
+        arguments: [
+            tx.object(carId),
+            tx.pure.bool(newStatus),
+            // 🔴 修正：無論上架或下架，都必須傳入一個 u64 數字
+            tx.pure.u64(priceInMist) 
+        ]
+    });
+
+    if (user?.type === "zklogin") {
+        await executeZkTransaction(tx, newStatus ? "已上架！" : "已下架！");
+    } else {
+        tx.setSender(user!.address);
+        signAndExecute({ transaction: tx, options: { showEffects: true } }, {
+            onSuccess: () => { alert(newStatus ? "已上架！" : "已下架！"); window.location.reload(); },
+            onError: (e) => alert("操作失敗: " + e.message)
+        });
+    }
   };
 
   if (!user) return null;
@@ -189,6 +197,13 @@ export function MyCars() {
                     }`}>
                         {car.isListed ? "出售中" : "私有"}
                     </div>
+
+                    {/* 顯示目前價格 */}
+                    {car.isListed && car.price && (
+                        <div className="absolute bottom-3 right-3 bg-white/90 px-2 py-1 rounded text-xs font-bold text-green-700 shadow-sm">
+                            {(Number(car.price) / 1_000_000_000).toLocaleString()} SUI
+                        </div>
+                    )}
                   </div>
                   
                   <div className="p-5">
