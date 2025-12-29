@@ -177,15 +177,10 @@ export function MintCar() {
         tx.setSender(user.address);
         
         signAndExecute(
-            { 
-                transaction: tx,
-            }, 
+            { transaction: tx }, 
             {
                 onSuccess: (res) => { 
-                    // 🔴 修正 2：簡化成功判斷
-                    // 因為沒傳 options，可能拿不到 effects，我們直接視為成功
-                    console.log("錢包回傳:", res);
-                    alert(`鑄造成功 (已送出)!\nDigest: ${res.digest}`); 
+                    alert(`鑄造成功!\nDigest: ${res.digest}`); 
                     window.location.reload();
                 },
                 onError: (e) => alert("錢包交易失敗: " + e.message)

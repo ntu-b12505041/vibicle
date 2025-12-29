@@ -48,7 +48,7 @@ export function useUserAuth() {
     user,
     isLoading,
     login: async () => {  
-        const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+        const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!;
         const redirectUrl = `${window.location.origin}/auth`;
         try {
             // @ts-ignore

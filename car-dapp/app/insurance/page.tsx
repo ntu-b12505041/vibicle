@@ -142,14 +142,11 @@ export default function InsurancePage() {
         } else {
             tx.setSender(user.address);
             signAndExecute(
-                { transaction: tx, options: { showEffects: true } }, 
+                { transaction: tx }, 
                 { 
                     onSuccess: (res) => { 
-                        if (res.effects?.status.status === "success") {
-                            alert("成功"); 
-                        } else {
-                            alert("交易失敗");
-                        }
+                        alert("成功! Digest: " + res.digest); 
+                        window.location.reload(); 
                     },
                     onError: (e) => alert("錢包錯誤: " + e.message)
                 }

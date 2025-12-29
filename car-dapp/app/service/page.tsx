@@ -146,16 +146,12 @@ export default function ServicePage() {
         } else {
             tx.setSender(user.address);
             signAndExecute(
-                { transaction: tx, options: { showEffects: true } }, 
+                { transaction: tx }, 
                 { 
                     onSuccess: (res) => { 
-                       const status = res.effects?.status?.status;
-                       if (status === "failure") {
-                           alert("失敗：" + res.effects?.status?.error);
-                       } else {
-                           alert("成功"); 
-                           window.location.reload(); 
-                       }
+                       // 這裡簡單判斷 digest 即可，因為沒 options 拿不到 effects
+                       alert("成功! Digest: " + res.digest); 
+                       window.location.reload(); 
                     },
                     onError: (e) => alert("錢包錯誤: " + e.message)
                 }

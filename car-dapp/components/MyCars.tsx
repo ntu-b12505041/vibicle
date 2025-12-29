@@ -115,9 +115,9 @@ export function MyCars() {
           await executeZkTransaction(tx, "過戶成功！車輛已移出您的車庫。");
       } else {
           tx.setSender(user!.address);
-          signAndExecute({ transaction: tx, options: { showEffects: true } }, {
-              onSuccess: () => { alert("過戶成功！車輛已移出您的車庫。"); window.location.reload(); },
-              onError: (e) => alert("過戶失敗: " + e.message)
+          signAndExecute({ transaction: tx }, {
+            onSuccess: () => { alert("過戶成功！車輛已移出您的車庫。"); window.location.reload(); },
+            onError: (e) => alert("過戶失敗: " + e.message)
           });
       }
   };
@@ -153,9 +153,9 @@ export function MyCars() {
         await executeZkTransaction(tx, newStatus ? "已上架！" : "已下架！");
     } else {
         tx.setSender(user!.address);
-        signAndExecute({ transaction: tx, options: { showEffects: true } }, {
-            onSuccess: () => { alert(newStatus ? "已上架！" : "已下架！"); window.location.reload(); },
-            onError: (e) => alert("操作失敗: " + e.message)
+        signAndExecute({ transaction: tx }, {
+          onSuccess: () => { alert(newStatus ? "已上架！" : "已下架！"); window.location.reload(); },
+          onError: (e) => alert("操作失敗: " + e.message)
         });
     }
   };
