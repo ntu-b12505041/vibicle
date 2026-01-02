@@ -24,3 +24,62 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+
+/* 🟢 新增：Cyberpunk 動畫特效 */
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+.scanline::before {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+  z-index: 50;
+  background-size: 100% 2px, 3px 100%;
+  pointer-events: none;
+  opacity: 0.3;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.cyber-glow {
+  box-shadow: 0 0 10px rgba(6, 224, 249, 0.3), 0 0 20px rgba(6, 224, 249, 0.2);
+}
+
+.cyber-glow-text {
+  text-shadow: 0 0 5px rgba(6, 224, 249, 0.7);
+}
+
+/* 自定義 Connect Button 樣式覆蓋 (讓官方按鈕變 Cyberpunk) */
+.cyber-connect-btn button {
+  background-color: #06e0f9 !important;
+  color: #050b14 !important;
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  border-radius: 2px !important;
+  height: 3.5rem !important;
+  width: 100% !important;
+  transition: all 0.3s !important;
+  box-shadow: 0 0 15px rgba(6, 224, 249, 0.4) !important;
+}
+
+.cyber-connect-btn button:hover {
+  box-shadow: 0 0 25px rgba(6, 224, 249, 0.8) !important;
+  transform: translateY(-2px) !important;
+}

@@ -11,7 +11,6 @@ import { fromB64, toB64 } from "@mysten/sui/utils";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { getZkLoginSignature, computeZkLoginAddressFromSeed } from "@mysten/sui/zklogin";
 import { EnokiClient } from "@mysten/enoki";
-// 🔴 新增：引入 Link 用於導航
 import Link from "next/link"; 
 
 const WALRUS_PUBLISHER = "/api/upload";
@@ -22,7 +21,7 @@ function getIssFromJwt(jwt: string) { try { return JSON.parse(atob(jwt.split('.'
 
 export default function ServicePage() {
   const { user, logout } = useUserAuth();
-  const { isService, serviceCapId } = useCapabilities();
+  const { isService, serviceCapId, isLoading: capLoading } = useCapabilities();
   const { mutate: signAndExecute } = useSignAndExecuteTransaction(); 
   
   const [carId, setCarId] = useState("");
@@ -149,8 +148,7 @@ export default function ServicePage() {
                 { transaction: tx }, 
                 { 
                     onSuccess: (res) => { 
-                       // 這裡簡單判斷 digest 即可，因為沒 options 拿不到 effects
-                       alert("成功! Digest: " + res.digest); 
+                       alert("成功"); 
                        window.location.reload(); 
                     },
                     onError: (e) => alert("錢包錯誤: " + e.message)
@@ -166,114 +164,141 @@ export default function ServicePage() {
     }
   };
 
-  // 🔴 優化：未登入時的 UI
-  if (!user) {
+  if (!user || capLoading || !isService) {
       return (
-          <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
-              <div className="bg-white p-8 rounded-xl shadow-lg text-center max-w-md w-full">
-                  <h1 className="text-2xl font-bold text-gray-800 mb-2">🔧 保養廠後台</h1>
-                  <p className="text-gray-500 mb-6">此頁面僅限授權的保養廠人員存取</p>
-                  
-                  <div className="flex flex-col gap-3">
-                      <Link href="/" className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition">
-                          ← 返回首頁登入
-                      </Link>
-                  </div>
+          <div className="min-h-screen bg-[#050b14] flex flex-col items-center justify-center p-4">
+              <div className="bg-[#0a1320] border border-[#00E5FF]/30 p-8 rounded-lg shadow-[0_0_15px_rgba(0,229,255,0.2)] text-center max-w-md w-full relative overflow-hidden">
+                  <div className="absolute inset-0 bg-[linear-gradient(rgba(0,229,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,229,255,0.05)_1px,transparent_1px)] bg-[size:20px_20px]"></div>
+                  <h1 className="text-2xl font-['Press_Start_2P',_cursive] text-[#00E5FF] mb-4 relative z-10">ACCESS DENIED</h1>
+                  <p className="text-gray-400 mb-8 font-mono text-sm relative z-10">
+                      {capLoading ? "VERIFYING CREDENTIALS..." : !user ? "PLEASE LOGIN" : "INVALID CLEARANCE LEVEL"}
+                  </p>
+                  <Link href="/" className="inline-block w-full py-3 px-4 bg-[#00E5FF]/10 hover:bg-[#00E5FF] text-[#00E5FF] hover:text-black border border-[#00E5FF] rounded font-bold transition-all relative z-10">
+                      RETURN TO BASE
+                  </Link>
               </div>
           </div>
       );
   }
 
-  // 🔴 優化：已登入時的 UI 結構
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-        <div className="p-8 max-w-3xl mx-auto">
-            <div className="flex justify-between items-center mb-8">
+    <div className="min-h-screen bg-[#050b14] text-white font-['Space_Grotesk',_sans-serif] selection:bg-[#00E5FF] selection:text-black overflow-x-hidden relative">
+        <div className="fixed inset-0 bg-[linear-gradient(rgba(0,229,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,229,255,0.05)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none z-0"></div>
+        <div className="fixed inset-0 bg-[linear-gradient(to_bottom,rgba(255,255,255,0),rgba(255,255,255,0)_50%,rgba(0,0,0,0.1)_50%,rgba(0,0,0,0.1))] bg-[size:100%_4px] pointer-events-none z-50 opacity-20"></div>
+
+        <header className="w-full border-b-2 border-[#00E5FF] bg-[#050b14]/90 backdrop-blur-md sticky top-0 z-40 shadow-[0_0_15px_rgba(0,229,255,0.3)]">
+            <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                    {/* 回首頁按鈕 */}
-                    <Link href="/" className="text-gray-500 hover:text-gray-900 transition flex items-center gap-1 font-medium">
-                        ← 首頁
-                    </Link>
-                    <h1 className="text-2xl font-bold text-gray-800">🔧 保養廠作業系統</h1>
+                    <Link href="/" className="text-[#00E5FF] hover:text-white transition-colors text-2xl font-bold">←</Link>
+                    <div>
+                        <h1 className="font-['Press_Start_2P',_cursive] text-xs text-[#00E5FF] tracking-widest mb-1">SYSTEM ONLINE</h1>
+                        <h2 className="font-bold text-xl text-white tracking-wider">SERVICE STATION v.3.0</h2>
+                    </div>
                 </div>
-                
                 <div className="flex items-center gap-4">
-                    <span className="text-xs text-gray-500 font-mono bg-white px-2 py-1 rounded border">
-                        {user.address.slice(0,6)}...
-                    </span>
-                    <button onClick={logout} className="text-sm text-red-500 hover:text-red-700 font-medium underline">
-                        登出
-                    </button>
+                    <div className="text-right hidden sm:block">
+                        <p className="text-xs text-[#00FF00] font-['Press_Start_2P',_cursive]">OPERATOR</p>
+                        <p className="text-sm font-bold font-mono">{user.address.slice(0,6)}...</p>
+                    </div>
+                    <button onClick={logout} className="text-gray-400 hover:text-[#FF3333] transition-colors font-medium text-sm">LOGOUT</button>
                 </div>
             </div>
+        </header>
 
-            <div className="flex flex-col gap-6 bg-white p-8 rounded-xl shadow-lg border border-gray-100">
-                <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">車輛 ID (Object ID)</label>
-                        <input className="w-full px-4 py-2 border rounded-lg bg-gray-50 font-mono text-sm" 
-                            value={carId} onChange={e => setCarId(e.target.value)} placeholder="0x..." />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">本次里程數 (KM)</label>
-                        <input type="number" className="w-full px-4 py-2 border rounded-lg" 
-                            value={mileage} onChange={e => setMileage(e.target.value)} />
-                    </div>
-                </div>
+        <main className="relative z-10 w-full max-w-5xl mx-auto px-6 py-10">
+            <div className="mb-8 border-l-4 border-[#00FF00] pl-6 py-2 relative overflow-hidden group">
+                <div className="absolute inset-0 bg-gradient-to-r from-[#00FF00]/10 to-transparent transform -translate-x-full group-hover:translate-x-0 transition-transform duration-700"></div>
+                <h2 className="font-['Press_Start_2P',_cursive] text-2xl text-white mb-2">NEW SERVICE ENTRY</h2>
+                <p className="text-[#29B6F6] font-mono">Secure connection established. Ready to write immutable record.</p>
+            </div>
 
-                <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                    <h3 className="text-sm font-bold text-blue-800 mb-3">🛠️ 專業檢修數據</h3>
-                    <div className="grid md:grid-cols-2 gap-4">
+            <div className="bg-[#0a1320] border border-[#00E5FF]/30 rounded-lg p-8 relative overflow-hidden shadow-[0_0_20px_rgba(0,229,255,0.1)]">
+                <div className="grid md:grid-cols-2 gap-8 mb-8">
+                    {/* Basic Info */}
+                    <div className="space-y-6">
+                        <h3 className="text-[#00E5FF] font-['Press_Start_2P',_cursive] text-xs mb-4 uppercase border-b border-[#00E5FF]/30 pb-2">Vehicle Identification</h3>
+                        
                         <div>
-                            <label className="block text-xs font-semibold text-gray-600 mb-1">下次建議保養里程</label>
-                            <input type="number" className="w-full px-3 py-2 border rounded bg-white" 
-                                value={nextDueKm} onChange={e => setNextDueKm(e.target.value)} placeholder="e.g. 15000" />
+                            <label className="block text-xs text-[#29B6F6] font-bold tracking-widest uppercase mb-2">Target Object ID</label>
+                            <input className="w-full bg-[#050b14] border border-[#1a3548] text-white px-4 py-3 focus:outline-none focus:border-[#00E5FF] focus:shadow-[0_0_10px_rgba(0,229,255,0.3)] transition-all font-mono text-sm" 
+                                value={carId} onChange={e => setCarId(e.target.value)} placeholder="0x..." />
                         </div>
+
                         <div>
-                            <label className="block text-xs font-semibold text-gray-600 mb-1">電瓶序號 (選填)</label>
-                            <input className="w-full px-3 py-2 border rounded bg-white" 
-                                value={batterySn} onChange={e => setBatterySn(e.target.value)} placeholder="更換時填寫" />
+                            <label className="block text-xs text-[#29B6F6] font-bold tracking-widest uppercase mb-2">Current Odometer (KM)</label>
+                            <input type="number" className="w-full bg-[#050b14] border border-[#1a3548] text-white px-4 py-3 focus:outline-none focus:border-[#00E5FF] focus:shadow-[0_0_10px_rgba(0,229,255,0.3)] transition-all font-mono text-sm" 
+                                value={mileage} onChange={e => setMileage(e.target.value)} />
                         </div>
-                        <div className="md:col-span-2">
-                            <label className="block text-xs font-semibold text-gray-600 mb-1">DTC 故障碼 (逗號分隔)</label>
-                            <input className="w-full px-3 py-2 border rounded bg-white font-mono text-sm" 
+
+                        <div>
+                            <label className="block text-xs text-[#29B6F6] font-bold tracking-widest uppercase mb-2">Service Description</label>
+                            <textarea className="w-full bg-[#050b14] border border-[#1a3548] text-white px-4 py-3 focus:outline-none focus:border-[#00E5FF] focus:shadow-[0_0_10px_rgba(0,229,255,0.3)] transition-all font-mono text-sm h-32 resize-none" 
+                                value={description} onChange={e => setDescription(e.target.value)} placeholder="Enter detailed service log..." />
+                        </div>
+                    </div>
+
+                    {/* Technical Data */}
+                    <div className="space-y-6">
+                        <h3 className="text-[#00E5FF] font-['Press_Start_2P',_cursive] text-xs mb-4 uppercase border-b border-[#00E5FF]/30 pb-2">Technical Diagnostics</h3>
+                        
+                        <div>
+                            <label className="block text-xs text-[#29B6F6] font-bold tracking-widest uppercase mb-2">Next Service Due (KM)</label>
+                            <input type="number" className="w-full bg-[#050b14] border border-[#1a3548] text-white px-4 py-3 focus:outline-none focus:border-[#00E5FF] transition-all font-mono text-sm" 
+                                value={nextDueKm} onChange={e => setNextDueKm(e.target.value)} placeholder="Recommended next visit" />
+                        </div>
+
+                        <div>
+                            <label className="block text-xs text-[#29B6F6] font-bold tracking-widest uppercase mb-2">DTC Codes (Comma Separated)</label>
+                            <input className="w-full bg-[#050b14] border border-[#1a3548] text-white px-4 py-3 focus:outline-none focus:border-[#00E5FF] transition-all font-mono text-sm uppercase" 
                                 value={dtcCodes} onChange={e => setDtcCodes(e.target.value)} placeholder="P0300, P0171..." />
                         </div>
-                        <div className="md:col-span-2 flex items-center gap-2">
-                            <input type="checkbox" id="reset" className="w-4 h-4" 
+
+                        <div>
+                            <label className="block text-xs text-[#29B6F6] font-bold tracking-widest uppercase mb-2">Battery S/N (Optional)</label>
+                            <input className="w-full bg-[#050b14] border border-[#1a3548] text-white px-4 py-3 focus:outline-none focus:border-[#00E5FF] transition-all font-mono text-sm" 
+                                value={batterySn} onChange={e => setBatterySn(e.target.value)} placeholder="N/A" />
+                        </div>
+
+                        <div className="flex items-center gap-3 pt-4">
+                            <input type="checkbox" id="reset" className="w-5 h-5 bg-[#050b14] border-[#00E5FF] text-[#00E5FF] focus:ring-0 rounded" 
                                 checked={isReset} onChange={e => setIsReset(e.target.checked)} />
-                            <label htmlFor="reset" className="text-sm text-gray-700">已執行保養燈歸零 (Maintenance Reset)</label>
+                            <label htmlFor="reset" className="text-sm text-gray-300 cursor-pointer select-none">Maintenance Light Reset Performed</label>
                         </div>
                     </div>
                 </div>
 
-                <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">維修內容說明</label>
-                    <textarea className="w-full px-4 py-2 border rounded-lg h-24 resize-none" 
-                        value={description} onChange={e => setDescription(e.target.value)} />
-                </div>
-
-                <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">附件 (維修單/照片)</label>
+                {/* Evidence Upload */}
+                <div className="border-t border-[#1a3548] pt-6 mb-8">
+                    <label className="block text-xs text-[#29B6F6] font-bold tracking-widest uppercase mb-4">Digital Evidence (Walrus)</label>
                     <input type="file" multiple ref={fileInputRef} className="hidden" onChange={handleFileSelect} />
-                    <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition mb-3">
-                        📎 選擇檔案
-                    </button>
-                    <div className="space-y-2">
-                        {selectedFiles.map((f, i) => (
-                            <div key={i} className="flex justify-between items-center bg-gray-50 px-3 py-2 rounded text-sm">
-                                <span>{f.name}</span>
-                                <button onClick={() => removeFile(i)} className="text-red-400 hover:text-red-600">✕</button>
-                            </div>
-                        ))}
+                    
+                    <div className="flex gap-4 mb-4">
+                        <button onClick={() => fileInputRef.current?.click()} className="px-6 py-3 bg-[#1a3548] hover:bg-[#29B6F6] hover:text-black text-[#29B6F6] border border-[#29B6F6] rounded font-arcade text-xs transition-all">
+                            + UPLOAD FILES
+                        </button>
                     </div>
+
+                    {selectedFiles.length > 0 && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {selectedFiles.map((f, i) => (
+                                <div key={i} className="flex justify-between items-center bg-[#050b14] border border-[#1a3548] px-4 py-2 rounded text-xs text-gray-300 font-mono">
+                                    <span className="truncate">{f.name}</span>
+                                    <button onClick={() => removeFile(i)} className="text-[#FF3333] hover:text-white ml-2">DEL</button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
-                <button onClick={handleSubmit} disabled={loading} className="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-lg shadow transition disabled:bg-gray-300">
-                    {loading ? "上鏈中..." : "寫入區塊鏈"}
+                <button 
+                    onClick={handleSubmit} 
+                    disabled={loading} 
+                    className="w-full py-4 bg-[#00E5FF]/10 border border-[#00E5FF] text-[#00E5FF] hover:bg-[#00E5FF] hover:text-black font-bold font-['Press_Start_2P',_cursive] text-sm transition-all duration-300 shadow-[0_0_10px_rgba(0,229,255,0.2)] hover:shadow-[0_0_20px_rgba(0,229,255,0.6)] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    {loading ? "PROCESSING..." : "COMMIT TO BLOCKCHAIN"}
                 </button>
             </div>
-        </div>
+        </main>
     </div>
   );
 }
