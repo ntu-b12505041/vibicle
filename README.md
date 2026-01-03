@@ -1,21 +1,45 @@
-# CarPassport - 基於 Sui 的去中心化車輛護照
+# Vibicle
 
-**CarPassport** 是一個結合 Web2 極致體驗與 Web3 不可篡改性的全端 dApp。
-我們致力於解決二手車市場資訊不對稱的問題，透過區塊鏈技術，讓每一台車都擁有一本「誠實的數位護照」。
+### Decentralized Vehicle History Passport on Sui
 
-## 專案亮點 (Key Features)
+**Vibicle** bridges the gap between Web2 usability and Web3 immutability. It creates a transparent, tamper-proof digital passport for vehicles, allowing owners, service centers, and insurance providers to collaborate on a single source of truth without friction.
 
-### 1. Web2 等級的絲滑體驗
-*   **Google 一鍵登入**: 整合 **Enoki zkLogin**，使用者無需管理助記詞，用 Google 帳號即可擁有 Sui 錢包。
-*   **免 Gas 費 (Sponsored Transactions)**: 整合 **Shinami Gas Station**，平台代付手續費，使用者零門檻上鏈。
+![Sui](https://img.shields.io/badge/Sui-Move-4EA8DE?style=for-the-badge&logo=sui&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)
+![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=for-the-badge&logo=typescript)
+![Walrus](https://img.shields.io/badge/Storage-Walrus-orange?style=for-the-badge)
 
-### 2. 完整的資產所有權模型
-*   **Sui Shared Object**: 採用共享物件架構，實現「車主擁有、第三方寫入」的協作模式。
-*   **動態 NFT**: 車輛履歷（保養、事故）透過 Dynamic Fields 動態掛載，資料可無限擴充且永遠跟隨車輛。
+---
 
-### 3. 實用的商業邏輯
-*   **角色權限管理 (RBAC)**: 
-    *   **Admin**: 鏈上發放/撤銷機構憑證。
-    *   **保養廠/保險公司**: 僅授權機構可寫入不可篡改的維修紀錄。
-*   **去中心化儲存**: 車況照片、維修單據皆上傳至 **Walrus** 網路，確保數據永久保存且抗審查。
-*   **PDF 匯出**: 支援將鏈上數據一鍵匯出為 PDF 報告，方便線下交易使用。
+## Key Features
+
+### 1. Frictionless UX (Web2.5 Experience)
+*   **Invisible Wallet (zkLogin)**: Users onboard instantly using their Google accounts. No seed phrases, no wallets to install. Powered by **Enoki**.
+*   **Gasless Operations**: All transactions are sponsored via **Shinami Gas Station**, removing the barrier of acquiring gas tokens for end-users.
+
+### 2. Robust Architecture
+*   **Shared Object Model**: Unlike traditional NFTs, Vibicle utilizes Sui's **Shared Objects** to enable multi-party collaboration (Owners, Mechanics, Insurers) on a single asset without transferring ownership.
+*   **Dynamic Fields**: Vehicle history (maintenance logs, accident reports) and comments are attached as dynamic fields, ensuring scalability and cost-efficiency.
+
+### 3. Decentralized Infrastructure
+*   **Immutable Storage**: All vehicle imagery and documentation are stored on **Walrus**, a decentralized blob storage network, ensuring data persistence and censorship resistance.
+*   **Role-Based Access Control (RBAC)**: On-chain authority management ensures only verified Service Centers and Insurance Providers can append specific records.
+
+---
+
+## Tech Stack
+
+*   **Frontend**: Next.js 16 (App Router), React 19, Tailwind CSS 4
+*   **Smart Contract**: Sui Move
+*   **Authentication**: Mysten Labs Enoki (zkLogin)
+*   **Relayer/Sponsor**: Shinami Gas Station
+*   **Storage**: Walrus (HTTP Aggregator)
+
+---
+
+## Contract Deployment (Sui Testnet)
+
+*   **Package ID**: `0x781ebcf6049b015b991983a0db5e1a5aaad673ad68ee18ab8f94e45a073bea4f`
+*   **Car Registry**: `0x2167b0c857ab8d99813dec5661fafbcb175f214059ccfdf370a81d1656c38e38`
+*   **Auth Registry**: `0x4abdbcaa3bcaea3369f216b4a442880b71aff59d8a5310337de2ace7e0b72a8a`

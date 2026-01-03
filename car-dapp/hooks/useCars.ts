@@ -1,5 +1,5 @@
 import { useSuiClient } from "@mysten/dapp-kit";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { normalizeSuiAddress } from "@mysten/sui/utils";
 import { CAR_REGISTRY_ID } from "../constants";
 
@@ -12,17 +12,12 @@ function getImageUrl(rawUrl: any) {
   return `${WALRUS_AGGREGATOR}/${urlStr}`;
 }
 
-export function useCars(ownerFilter?: string) {
+export function useCars(ownerFilter?: string, isMarketView: boolean = false) {
   const suiClient = useSuiClient();
   const [cars, setCars] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // 避免同時多次 refetch 造成競態
-  const inFlightRef = useRef(false);
-
   const refetch = useCallback(async () => {
-    if (inFlightRef.current) return;
-    inFlightRef.current = true;
     setIsLoading(true);
 
     try {
@@ -76,33 +71,36 @@ export function useCars(ownerFilter?: string) {
 
       // 4) 過濾邏輯
       if (ownerFilter) {
+        // A. 我的車庫：只看 Owner
         const target = normalizeSuiAddress(ownerFilter);
         setCars(loadedCars.filter((c) => normalizeSuiAddress(c.owner) === target));
-      } else {
+      } else if (isMarketView) {
+        // B. 二手市場：只看 isListed
         setCars(loadedCars.filter((c) => c.isListed === true));
+      } else {
+        // C. 未就緒或無權限：不顯示
+        setCars([]);
       }
+      
     } catch (e) {
       console.error("Fetch cars failed:", e);
     } finally {
       setIsLoading(false);
-      inFlightRef.current = false;
     }
-  }, [suiClient, ownerFilter]);
+  }, [suiClient, ownerFilter, isMarketView]);
 
-  // 初次載入抓一次
   useEffect(() => {
     refetch();
   }, [refetch]);
 
-  // ✅ 建議：市場頁不要自動每 5 秒刷（會跟 SCAN 打架，且浪費 RPC）
-  // 如果你真的要輪詢，建議改成 15~30 秒並且只在 market 用，或做成可選
-  //
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     refetch();
-  //   }, 15000);
-  //   return () => clearInterval(interval);
-  // }, [refetch]);
+  // 定期刷新
+  useEffect(() => {
+    const interval = setInterval(() => {
+        // 只有當參數有效時才刷新，節省資源
+        if (ownerFilter || isMarketView) refetch();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [refetch, ownerFilter, isMarketView]);
 
   return { cars, isLoading, refetch };
 }

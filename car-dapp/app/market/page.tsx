@@ -6,7 +6,7 @@ import { useCars } from "../../hooks/useCars";
 import Home from "../page";
 
 export default function MarketPage() {
-  const { cars, isLoading, refetch } = useCars(); // 核心邏輯：抓取資料
+  const { cars, isLoading, refetch } = useCars(undefined, true);; // 核心邏輯：抓取資料
 
   return (
     // 全局背景設定
