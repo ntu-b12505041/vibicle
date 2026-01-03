@@ -1,15 +1,15 @@
 // 1. 合約 Package ID
-export const PACKAGE_ID = "0xde51d4bb052944099242ce4fb2fad764405c3777f938001b6fee5915815e0109";
+export const PACKAGE_ID = "0xbeed8e27325f9b0f2894c2e2878e6fffed792e10d75137fe480136697d51f986";
 
 // 2. 模組名稱
 export const MODULE_NAME = "vehicle";
 
 // 3. Shared Objects
-export const CAR_REGISTRY_ID = "0xd5d20c88044ae9e4df843c816427870afd8b1a193f501d617c612d923b9b621a";
-export const AUTH_REGISTRY_ID = "0x5d7996a1067ac06dc5c8def4a7eb809bdd3f09b9732bf0047c0160a1f4d98c16";
+export const CAR_REGISTRY_ID = "0xbc379139b676c9f71dc4ef80c9c3fd1546deb3a7208e622d35b148d2555e4753";
+export const AUTH_REGISTRY_ID = "0x18e49dce2f94bc1faff370f95bb656759792e89be502870551802994f0a9dcb6";
 
 // 4. AdminCap (Owned Object)
-export const ADMIN_CAP_ID = "0xcd54f5f0bcda8727d98eafad99cc4d75598a253e672c5dbca4987554be969449";
+export const ADMIN_CAP_ID = "0xe91647bdcec70adf896ac34908d4235217e088c3f697295653d1966009a626c5";
 
 // 5. 物件類型 (用於權限檢查 Hook)
 export const ADMIN_CAP_TYPE = `${PACKAGE_ID}::${MODULE_NAME}::AdminCap`;

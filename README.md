@@ -40,6 +40,6 @@
 
 ## Contract Deployment (Sui Testnet)
 
-*   **Package ID**: `0x781ebcf6049b015b991983a0db5e1a5aaad673ad68ee18ab8f94e45a073bea4f`
-*   **Car Registry**: `0x2167b0c857ab8d99813dec5661fafbcb175f214059ccfdf370a81d1656c38e38`
-*   **Auth Registry**: `0x4abdbcaa3bcaea3369f216b4a442880b71aff59d8a5310337de2ace7e0b72a8a`
+*   **Package ID**: `0xbeed8e27325f9b0f2894c2e2878e6fffed792e10d75137fe480136697d51f986`
+*   **Car Registry**: `0xbc379139b676c9f71dc4ef80c9c3fd1546deb3a7208e622d35b148d2555e4753`
+*   **Auth Registry**: `0x18e49dce2f94bc1faff370f95bb656759792e89be502870551802994f0a9dcb6`
