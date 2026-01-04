@@ -15,7 +15,7 @@ export async function PUT(request: Request) {
     // 🔴 關鍵修正：
     // 舊版 (Devnet): /v1/store
     // 新版 (Testnet): /v1/blobs
-    const response = await fetch(`${WALRUS_PUBLISHER}/v1/blobs?epochs=5`, {
+    const response = await fetch(`${WALRUS_PUBLISHER}/v1/blobs?epochs=1`, {
       method: "PUT",
       body: body,
       duplex: "half", // Node.js fetch 需要這個
