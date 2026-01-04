@@ -12,7 +12,7 @@ import { PACKAGE_ID, MODULE_NAME, CAR_REGISTRY_ID } from "../constants";
 import { useUserAuth } from "../hooks/useUserAuth";
 
 const WALRUS_PUBLISHER = "/api/upload";
-const WALRUS_AGGREGATOR = "https://aggregator.walrus-testnet.walrus.space/v1/blobs";
+const WALRUS_AGGREGATOR = "https://wal-publisher-testnet.staketab.org";
 const SUI_RPC_URL = "https://fullnode.testnet.sui.io:443";
 
 function generateRandomVIN(): string {
